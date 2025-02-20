@@ -1,0 +1,78 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.24.2.0
+Copyright (C) 2017 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information:  ,  , LIC=CZLZX-H6T0Z-TG17T-R95BH-XARN2-GJDL0
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Plus  Version: 5.24.1
+Toolchain Path:  E:\Softwares\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 5 (build 528)
+Assembler:       Armasm.exe V5.06 update 5 (build 528)
+Linker/Locator:  ArmLink.exe V5.06 update 5 (build 528)
+Library Manager: ArmAr.exe V5.06 update 5 (build 528)
+Hex Converter:   FromElf.exe V5.06 update 5 (build 528)
+CPU DLL:         SARMCM3.DLL V5.24.1
+Dialog DLL:      DCM.DLL V1.16.0.0
+Target DLL:      CMSIS_AGDI.dll V1.28.3.0
+Dialog DLL:      TCM.DLL V1.32.0.0
+ 
+<h2>Project:</h2>
+E:\Documents\STM32 Projects\RM\new\v5\MDK-ARM\standard_robot.uvprojx
+Project File Date:  01/16/2025
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'E:\Softwares\Keil_v5\ARM\ARMCC\Bin'
+Build target 'standard_robot'
+compiling naive_gimbal_task.c...
+..\SAS_Code\naive_gimbal_task.c(493): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				if(gimbalYawCtrl.wantedAbsoluteAngle>=3.086)
+..\SAS_Code\naive_gimbal_task.c(453): warning:  #177-D: variable "selfTargetOffsetPitch"  was declared but never referenced
+      fp32 selfTargetOffsetPitch=0,selfTargetOffsetYaw=0;
+..\SAS_Code\naive_gimbal_task.c(453): warning:  #177-D: variable "selfTargetOffsetYaw"  was declared but never referenced
+      fp32 selfTargetOffsetPitch=0,selfTargetOffsetYaw=0;
+..\SAS_Code\naive_gimbal_task.c(633): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				if(gimbalPitchCtrl.wantedAbsoluteAngle-gimbalPitchCtrl.nowAbsoluteAngle < 
+IMBAL_DEAD_BOND && gimbalPitchCtrl.wantedAbsoluteAngle-gimbalPitchCtrl.nowAbsoluteAngle > -GIMBAL_DEAD_BOND ){
+..\SAS_Code\naive_gimbal_task.c(636): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  				if(gimbalYawCtrl.spd_filter.out-gimbalYawCtrl.radSpeed < 
+AW_DEAD_BOND && gimbalYawCtrl.spd_filter.out-gimbalYawCtrl.radSpeed > -YAW_DEAD_BOND ){
+..\SAS_Code\naive_gimbal_task.c(253): warning:  #177-D: variable "rc_mouse_x"  was declared but never referenced
+  static int16_t rc_mouse_x;
+..\SAS_Code\naive_gimbal_task.c(254): warning:  #177-D: variable "rc_mouse_y"  was declared but never referenced
+  static int16_t rc_mouse_y;
+..\SAS_Code\naive_gimbal_task.c(255): warning:  #177-D: variable "press_x"  was declared but never referenced
+  static int16_t press_x=0;
+..\SAS_Code\naive_gimbal_task.c: 8 warnings, 0 errors
+linking...
+Program Size: Code=65328 RO-data=6660 RW-data=1004 ZI-data=52756  
+"standard_tpye_c\standard_tpye_c.axf" - 0 Error(s), 8 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.8.0.pack
+                ARM.CMSIS.5.8.0
+                CMSIS (Common Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.5.0
+
+Package Vendor: Keil
+                https://www.keil.com/pack/Keil.STM32F4xx_DFP.2.17.1.pack
+                Keil.STM32F4xx_DFP.2.17.1
+                STMicroelectronics STM32F4 Series Device Support, Drivers and Examples
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_standard_robot
+  E:\Softwares\Keil_v5\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include
+  E:\Softwares\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:5.5.0
+Build Time Elapsed:  00:00:05
+</pre>
+</body>
+</html>
