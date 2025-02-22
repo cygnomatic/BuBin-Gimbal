@@ -166,13 +166,13 @@ void MX_FREERTOS_Init(void) {
     osThreadDef(DETECT, detect_task, osPriorityNormal, 0, 512);
     detect_handle = osThreadCreate(osThread(DETECT), NULL);
 		
-		osThreadDef(COMMUNICATION, communication_task, osPriorityHigh, 0, 512);
+		osThreadDef(COMMUNICATION, communication_task, osPriorityRealtime, 0, 512);
     communicationTask_handle = osThreadCreate(osThread(COMMUNICATION), NULL);
 
-    osThreadDef(gimbalTask, gimbal_task, osPriorityRealtime, 0, 1024);
+    osThreadDef(gimbalTask, gimbal_task, osPriorityHigh, 0, 1024);
     gimbalTaskHandle = osThreadCreate(osThread(gimbalTask), NULL);
 
-    osThreadDef(imuTask, start_INS_task, osPriorityHigh, 0, 1024); // start_INS_task进程在下面
+    osThreadDef(imuTask, start_INS_task, osPriorityRealtime, 0, 1024); // start_INS_task进程在下面
     imuTaskHandle = osThreadCreate(osThread(imuTask), NULL);
 
     osThreadDef(led, led_RGB_flow_task, osPriorityNormal, 0, 256); // 文件名叫led_flow_task

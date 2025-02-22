@@ -109,6 +109,8 @@ struct InstructBuff_s{
 //*******************全局变量********//
 // 摩擦轮开启
 bool_t fricOn=0;
+extern bool_t wantFricOn; // LYL
+bool_t wantTriggerOn = 0; // LYL
 
 // 拨弹轮开启
 uint8_t triggerOn=0;
@@ -179,7 +181,7 @@ static void getInstructionAndBuff(void)
 			if(insBuff.turnOnFric==1)
 				insBuff.turnOnFric=0;
 		}
-    //当遥控器右拨杆指向中央的时候，允许鼠标操控
+    //当遥控器左拨杆指向中央的时候，允许鼠标操控
     if(switch_is_mid(rc_p->rc.s[SHOOT_MODE_CHANNEL]))
     {
         if(rc_p->mouse.press_l) //按下左键
@@ -219,7 +221,7 @@ static void getInstructionAndBuff(void)
                 //为了防止卡弹，使用缓冲指令设计。当拨弹轮停止时才能关闭摩擦轮。
                 insBuff.shootMulti=0;
                 insBuff.shootOne=0;
-                insBuff.turnOnFric=0;   //，希望关闭摩擦轮
+                insBuff.turnOnFric=0;   //希望关闭摩擦轮
             }    
             else
             {
@@ -253,19 +255,32 @@ static void getInstructionAndBuff(void)
     }
     pressTimeDebug=pressTime;
 
-		if(robotIsAuto())
-		{
+		// LYL
+//		if(robotIsAuto())
+//		{
+//
+//			if(nuc_p->is_fire==0x02&&(nuc_p->confidence.data>0.9845))
+//				insBuff.shootMulti = 1 ;
+//			else if((nuc_p->is_fire==0x01&&(nuc_p->confidence.data>0.9845)))
+//				insBuff.shootOne = 1;
+//			else
+//			{
 
-			if(nuc_p->is_fire==0x02&&(nuc_p->confidence.data>0.9845))
-				insBuff.shootMulti = 1 ;
-			else if((nuc_p->is_fire==0x01&&(nuc_p->confidence.data>0.9845)))
-				insBuff.shootOne = 1;
-			else
-			{
-
-        insBuff.shootOne=0;
-        insBuff.shootMulti=0;
+//        insBuff.shootOne=0;
+//        insBuff.shootMulti=0;
+//			}
+//		}
+		// LYL
+		if (robotIsAuto() && wantFricOn){
+			if((nuc_p->confidence.data>0.9845)){
+//				insBuff.shootMulti = 1 ;
+				wantTriggerOn = 1;
+			} else {
+//        insBuff.shootOne=0;
+//        insBuff.shootMulti=0;
+				wantTriggerOn = 0;
 			}
+			//usart_printf("%d,%f\r\n",wantTriggerOn,nuc_p->confidence.data);
 		}
 
     if(toe_is_error(DBUS_TOE))
@@ -417,7 +432,7 @@ static void triggerModeChange(void)
     }
     else if(triggerMode==TriggerMode_e_ShootMulti)
     {
-           if(insBuff.shootMulti==0)
+				if(insBuff.shootMulti==0)
 						triggerMode = TriggerMode_e_Stop;
     }
 
@@ -425,7 +440,7 @@ static void triggerModeChange(void)
 
 static void setSpeedByMode(void)
 {
-    if(fricOn)
+    if(fricOn || wantFricOn)
     {
         wantedVShootMotor[0]=-SHOOT_SPEED_LIMIT;//实验测试转动方向。反过来可以实验卡弹时的退弹
         wantedVShootMotor[1]=SHOOT_SPEED_LIMIT;
@@ -444,7 +459,7 @@ static void setSpeedByMode(void)
     reverse = 0;
 
 
-    if(triggerOn)
+    if(triggerOn || wantTriggerOn)
         wantedVTriggerMotor=-SHOOT_TRIGGER_SPEED_LIMIT;//若正在解决stuck(reverse)，则以逆向v/4的速度转动
 		else
 				wantedVTriggerMotor=0;

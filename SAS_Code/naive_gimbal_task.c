@@ -115,7 +115,7 @@
 #define YAW_SPD_FILTER_NUM 1.0f
 
 #define GIMBAL_DEAD_BOND 0.00 // LYL:死区值
-#define YAW_DEAD_BOND 0.0002 // 0.0007 安全临界死区
+#define YAW_DEAD_BOND 0.00 // 0.0007 安全临界死区
 
 
 
@@ -262,6 +262,9 @@ static const toSTM32_t *nuc_p;  //NUC数据位置
 double delta_pitch,delta_yaw;
 
 static struct GimbalToChassis_s toChassis={0,0};
+
+extern bool_t fricOn; // LYL
+bool_t wantFricOn=0; // LYL，用处见naive_shoot_task.c
 
 static void initGimbalCtrls(void)
 {
@@ -481,12 +484,12 @@ void getControlAngles(void)
         
 			  
 				//pitch轴目标值控制
-				gimbalPitchCtrl.wantedAbsoluteAngle-=5*pitch_channel*PITCH_RC_SEN-20*rc_p->mouse.y*PITCH_MOUSE_SEN;
+				gimbalPitchCtrl.wantedAbsoluteAngle+=2*pitch_channel*PITCH_RC_SEN-20*rc_p->mouse.y*PITCH_MOUSE_SEN;
 //				//gimbalPitchCtrl.wantedAbsoluteAngle += adjust_channel(pitch_channel, K_CTRL_PROP_Y, K_CTRL_EXP_Y) * PITCH_RC_SEN - adjust_channel(rc_p->mouse.y, K_CTRL_MOUSE_Y, K_CTRL_EXP_Y) * PITCH_MOUSE_SEN ;
 
 				
 				//yaw轴目标值控制
-        gimbalYawCtrl.wantedAbsoluteAngle+=15*yaw_channel*YAW_RC_SEN+50*rc_p->mouse.x * YAW_MOUSE_SEN;
+        gimbalYawCtrl.wantedAbsoluteAngle+=10*yaw_channel*YAW_RC_SEN+50*rc_p->mouse.x * YAW_MOUSE_SEN;
 				//gimbalYawCtrl.wantedAbsoluteAngle +=  adjust_channel(yaw_channel, K_CTRL_PROP_X, K_CTRL_EXP_X) * YAW_RC_SEN + adjust_channel(rc_p->mouse.x,K_CTRL_MOUSE_X,K_CTRL_EXP_MOUSE_X)*YAW_MOUSE_SEN;
 
 				//修复bug
@@ -496,20 +499,23 @@ void getControlAngles(void)
 					gimbalYawCtrl.wantedAbsoluteAngle+=2*PI;
 				
 			// LYL修改
-			if(robotIsAuto())
+			//usart_printf("%d,%d\n", robotIsAuto(),fricOn);
+			if(robotIsAuto() && !fricOn)
 			{
-				delta_pitch = nuc_p->pitch.data;
+				// LYL:摩擦轮之后发弹的时候要打开
+				wantFricOn = 1;
+				delta_pitch =  -nuc_p->pitch.data;
 				delta_yaw = nuc_p->yaw.data;
-				
 				// LYL
-				//usart_printf("detect:%f,%f\r\n", delta_pitch, delta_yaw);
-				
-				if(delta_pitch > 0.00001){
+				//usart_printf("detect:%f,%f\tnow:%f,%f\r\n",delta_yaw, delta_pitch ,gimbalYawCtrl.nowAbsoluteAngle, gimbalPitchCtrl.nowAbsoluteAngle);
+				if(delta_pitch > 0.00001 || delta_pitch < -0.00001){
 					gimbalPitchCtrl.wantedAbsoluteAngle =delta_pitch;
 				}
-				if(delta_yaw > 0.00001){
+				if(delta_yaw > 0.00001 || delta_yaw < -0.00001){
 					gimbalYawCtrl.wantedAbsoluteAngle =delta_yaw;
 				}
+			} else {
+				wantFricOn = 0;
 			}
 
 
@@ -701,12 +707,13 @@ void gimbal_task(void const *pvParameters)
         CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
 				//CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
 				
-				
-		usart_printf("%f,%f\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalPitchCtrl.nowAbsoluteAngle);
+			// LYL：这个串口打印函数一放上电机就会卡	
+		//usart_printf("%f,%f\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalPitchCtrl.nowAbsoluteAngle);
 //				usart_printf("%d\n",*robotMode);
 				
 				// LYL
 //				usart_printf("now:%f,%f,%f\r\n",gimbalYawCtrl.nowAbsoluteAngle,gimbalPitchCtrl.nowAbsoluteAngle,gimbalPitchCtrl.wantedAbsoluteAngle);
+				//usart_printf("%d\r\n", fricOn);
 				
 				osDelay(GIMBAL_TASK_CTRL_TIME);
 				
@@ -730,5 +737,3 @@ const int16_t * getGimbalNowRoundsPoint(void)
 //to do :
 // 角速度能力测试
 // 
-
-
