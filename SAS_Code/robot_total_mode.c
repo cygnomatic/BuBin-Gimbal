@@ -140,11 +140,11 @@ void robot_total_mode_task(void const *pvParameters)
             robotState=RobotState_e_Spinner;
             keyBoardAndMouseHasChanged=1;
         }
-        if(rc_p->key.v & KEY_PRESSED_OFFSET_V)  
-        {
-            robotState=RobotState_e_CommonCar;
-            keyBoardAndMouseHasChanged=1;
-        }
+//        if(rc_p->key.v & KEY_PRESSED_OFFSET_V)  
+//        {
+//            robotState=RobotState_e_CommonCar;
+//            keyBoardAndMouseHasChanged=1;
+//        }
         //***********************************************************//
 
 

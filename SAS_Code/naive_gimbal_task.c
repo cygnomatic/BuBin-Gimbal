@@ -56,8 +56,8 @@
 
 //****************************机器人测试获得值*************//
 #define PITCH_TEST_INIT_ANGLE_MIDDLE_ECD 4628
-#define PITCH_TEST_MAX_ANGLE_ECD 5500
-#define PITCH_TEST_MIN_ANGLE_ECD 4800
+#define PITCH_TEST_MAX_ANGLE_ECD 5500 // 241.73度 总：8191
+#define PITCH_TEST_MIN_ANGLE_ECD 4800 // 210.96度
 #define PITCH_MAX_ANGLE_ECD 0.27f //0.275763俯角
 #define PITCH_MIN_ANGLE_ECD -0.28f //-0.280368仰角
 // #define PITCH_TEST_ANGLE_ECD_LENGTH 1039
@@ -77,7 +77,7 @@
  */
 
 // 输入角速度 rad/s 、输出电压 int16_t 的PID系数
-#define PITCH_SPD_KP 11000000.0f
+#define PITCH_SPD_KP 10000000.0f
 // #define PITCH_SPD_KP 10000000.0f
 
 #define PITCH_SPD_KI 2000.0f
@@ -484,12 +484,12 @@ void getControlAngles(void)
         
 			  
 				//pitch轴目标值控制
-				gimbalPitchCtrl.wantedAbsoluteAngle+=2*pitch_channel*PITCH_RC_SEN-20*rc_p->mouse.y*PITCH_MOUSE_SEN;
+				gimbalPitchCtrl.wantedAbsoluteAngle+=1*pitch_channel*PITCH_RC_SEN-10*rc_p->mouse.y*PITCH_MOUSE_SEN;
 //				//gimbalPitchCtrl.wantedAbsoluteAngle += adjust_channel(pitch_channel, K_CTRL_PROP_Y, K_CTRL_EXP_Y) * PITCH_RC_SEN - adjust_channel(rc_p->mouse.y, K_CTRL_MOUSE_Y, K_CTRL_EXP_Y) * PITCH_MOUSE_SEN ;
 
 				
 				//yaw轴目标值控制
-        gimbalYawCtrl.wantedAbsoluteAngle+=10*yaw_channel*YAW_RC_SEN+50*rc_p->mouse.x * YAW_MOUSE_SEN;
+        gimbalYawCtrl.wantedAbsoluteAngle+=5*yaw_channel*YAW_RC_SEN+20*rc_p->mouse.x * YAW_MOUSE_SEN;
 				//gimbalYawCtrl.wantedAbsoluteAngle +=  adjust_channel(yaw_channel, K_CTRL_PROP_X, K_CTRL_EXP_X) * YAW_RC_SEN + adjust_channel(rc_p->mouse.x,K_CTRL_MOUSE_X,K_CTRL_EXP_MOUSE_X)*YAW_MOUSE_SEN;
 
 				//修复bug
@@ -502,22 +502,20 @@ void getControlAngles(void)
 			//usart_printf("%d,%d\n", robotIsAuto(),fricOn);
 			if(robotIsAuto() && !fricOn)
 			{
-				// LYL:摩擦轮之后发弹的时候要打开
 				wantFricOn = 1;
 				delta_pitch =  -nuc_p->pitch.data;
 				delta_yaw = nuc_p->yaw.data;
 				// LYL
 				//usart_printf("detect:%f,%f\tnow:%f,%f\r\n",delta_yaw, delta_pitch ,gimbalYawCtrl.nowAbsoluteAngle, gimbalPitchCtrl.nowAbsoluteAngle);
 				if(delta_pitch > 0.00001 || delta_pitch < -0.00001){
-					gimbalPitchCtrl.wantedAbsoluteAngle =delta_pitch;
+					gimbalPitchCtrl.wantedAbsoluteAngle = delta_pitch;
 				}
 				if(delta_yaw > 0.00001 || delta_yaw < -0.00001){
-					gimbalYawCtrl.wantedAbsoluteAngle =delta_yaw;
+					gimbalYawCtrl.wantedAbsoluteAngle = delta_yaw;
 				}
 			} else {
 				wantFricOn = 0;
 			}
-
 
     }
     

@@ -35,6 +35,8 @@
 
 extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_usart3_rx;
+extern int is_rc_online_back;
+int is_rc_online = 0;
 
 
 //取正函数
@@ -145,9 +147,24 @@ void slove_data_error(void)
     RC_restart(SBUS_RX_BUF_NUM);
 }
 
+uint32_t current_rc_timer = 0;
+extern uint32_t global_count;
 //串口中断
 void USART3_IRQHandler(void)
 {
+	static uint32_t now_count = 0;
+	
+	is_rc_online = 1;
+	
+	if (now_count < global_count)
+	{
+		now_count = global_count;
+	}
+	
+	current_rc_timer = now_count;
+	
+	//usart_printf("%d\r\n", current_rc_timer);
+
     if(huart3.Instance->SR & UART_FLAG_RXNE)//接收到数据
     {
         __HAL_UART_CLEAR_PEFLAG(&huart3);

@@ -111,6 +111,8 @@ struct InstructBuff_s{
 bool_t fricOn=0;
 extern bool_t wantFricOn; // LYL
 bool_t wantTriggerOn = 0; // LYL
+bool_t mouseWantTriggerOn = 0;
+bool_t keywantFricOn = 0;
 
 // 拨弹轮开启
 uint8_t triggerOn=0;
@@ -258,7 +260,7 @@ static void getInstructionAndBuff(void)
 		// LYL
 //		if(robotIsAuto())
 //		{
-//
+
 //			if(nuc_p->is_fire==0x02&&(nuc_p->confidence.data>0.9845))
 //				insBuff.shootMulti = 1 ;
 //			else if((nuc_p->is_fire==0x01&&(nuc_p->confidence.data>0.9845)))
@@ -270,9 +272,31 @@ static void getInstructionAndBuff(void)
 //        insBuff.shootMulti=0;
 //			}
 //		}
+		
+		// LYL
+		static bool_t is_v_pressed = 0;
+		if (rc_p->key.v & KEY_PRESSED_OFFSET_V){
+			osDelay(100);
+			if ((rc_p->key.v & KEY_PRESSED_OFFSET_V) && !is_v_pressed) {
+				if (keywantFricOn) {keywantFricOn = 0;}
+				else {keywantFricOn = 1;}
+				is_v_pressed = 1;
+			} else {
+				is_v_pressed = 0;
+			}
+		}
+		if (rc_p->mouse.press_l)
+		{
+			mouseWantTriggerOn = 1;
+		} else {
+			mouseWantTriggerOn = 0;
+		}
+		
+		
+		
 		// LYL
 		if (robotIsAuto() && wantFricOn){
-			if((nuc_p->confidence.data>0.9845)){
+			if((nuc_p->confidence.data>0.9865)){
 //				insBuff.shootMulti = 1 ;
 				wantTriggerOn = 1;
 			} else {
@@ -281,6 +305,10 @@ static void getInstructionAndBuff(void)
 				wantTriggerOn = 0;
 			}
 			//usart_printf("%d,%f\r\n",wantTriggerOn,nuc_p->confidence.data);
+		}
+		else 
+		{
+			wantTriggerOn = 0;
 		}
 
     if(toe_is_error(DBUS_TOE))
@@ -440,11 +468,10 @@ static void triggerModeChange(void)
 
 static void setSpeedByMode(void)
 {
-    if(fricOn || wantFricOn)
+    if(fricOn || wantFricOn || keywantFricOn)
     {
         wantedVShootMotor[0]=-SHOOT_SPEED_LIMIT;//实验测试转动方向。反过来可以实验卡弹时的退弹
         wantedVShootMotor[1]=SHOOT_SPEED_LIMIT;
-			  
     }
     else
     {
@@ -458,13 +485,14 @@ static void setSpeedByMode(void)
     
     reverse = 0;
 
-
-    if(triggerOn || wantTriggerOn)
-        wantedVTriggerMotor=-SHOOT_TRIGGER_SPEED_LIMIT;//若正在解决stuck(reverse)，则以逆向v/4的速度转动
+    if(triggerOn || wantTriggerOn || mouseWantTriggerOn)
+        wantedVTriggerMotor=SHOOT_TRIGGER_SPEED_LIMIT;//若正在解决stuck(reverse)，则以逆向v/4的速度转动
 		else
 				wantedVTriggerMotor=0;
+
 }
 
+extern int is_rc_online_new;
 static void calcGiveCurrent1(void)
 {
     int i;
@@ -478,6 +506,12 @@ static void calcGiveCurrent1(void)
         giveShootCurrent[i]=shootMotorPIDs[i].out;
     PID_calc(&triggerMotorPID,presentVTriggerMotor,wantedVTriggerMotor);
     giveTriggerCurrent=triggerMotorPID.out;
+	
+	if (!is_rc_online_new)
+	{
+		giveTriggerCurrent=0;
+	}
+	
 }
 
 static void getShootMotorSpeed(void)
@@ -524,6 +558,8 @@ void shoot_task(void const *pvParameters)
         zeroCurrentMark=1;
         #endif
         
+				usart_printf("%d\r\n",is_rc_online_new);
+				
         if(zeroCurrentMark)
         {
             CAN_cmd_shoot(0,0);

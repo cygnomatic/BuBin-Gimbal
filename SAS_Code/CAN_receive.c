@@ -240,12 +240,15 @@ void CAN1_send_yaw()
 //这个通道发送底盘控制量
 typedef struct
 {
+	//uint8_t online_flag;
 	int16_t channel_0;
 	int16_t channel_2;
 	int16_t channel_3;
 	enum RobotState_e mode;
 	uint8_t keyboard;
 }can_send_encode_data_s;
+extern int is_rc_online_new;
+extern bool_t wantFricOn;
 void CAN1_send_channel()  // 使用CAN1发送遥控信息
 {
 	uint32_t send_mail_box;
@@ -255,8 +258,17 @@ void CAN1_send_channel()  // 使用CAN1发送遥控信息
 		uint8_t data_1[sizeof(can_send_encode_data_s)];
 	}can_send_data_channel_u;
 	can_send_data_channel_u data_u;
+	
+	data_u.data.channel_0 = 0;
+	if (is_rc_online_new)
+	{
+		data_u.data.channel_0 = data_u.data.channel_0 | 1;
+	}
+	
+	//usart_printf("%d\r\n", data_u.data.channel_0);
+	
 	rc_chassis = get_remote_control_point(); // Remote Control Pointer
-	data_u.data.channel_0 =rc_chassis->rc.ch[0];
+	//data_u.data.channel_0 =rc_chassis->rc.ch[0];
 	data_u.data.channel_2 =rc_chassis->rc.ch[2];
 	data_u.data.channel_3 =rc_chassis->rc.ch[3];
 	robotMode=getRobotPresentMode();
@@ -271,13 +283,16 @@ void CAN1_send_channel()  // 使用CAN1发送遥控信息
 		data_u.data.keyboard = (data_u.data.keyboard | 32);
 	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_D)
 		data_u.data.keyboard = (data_u.data.keyboard | 16);
-	if(get_fric())	//摩擦轮
+	if(get_fric() || wantFricOn)	//摩擦轮
 		data_u.data.keyboard = (data_u.data.keyboard | 8);
-	if(get_servo_state())
+	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_SHIFT)
 		data_u.data.keyboard = (data_u.data.keyboard | 4);
 	if(robotIsAuto())//修改成是否开启自瞄
 		data_u.data.keyboard = (data_u.data.keyboard | 2);
-	if(*getRobotPresentMode()==RobotState_e_Spinner)
+//	if(*getRobotPresentMode()==RobotState_e_Spinner)
+//		data_u.data.keyboard = (data_u.data.keyboard | 1);
+	// 应刘崇要求改的
+	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_CTRL)
 		data_u.data.keyboard = (data_u.data.keyboard | 1);
 	for(int i = 0; i <sizeof(can_send_encode_data_s); i++)
 	{

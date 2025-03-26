@@ -61,6 +61,7 @@ osThreadId totalModeTask_handle;
 osThreadId shootTaskTask_handle; 
 osThreadId shootTaskTrgMntr_handle;
 osThreadId communicationTask_handle;
+osThreadId rcDetectTask_handle;
 
 /* USER CODE END PTD */
 

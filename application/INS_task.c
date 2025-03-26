@@ -14,6 +14,7 @@
 #include "controller.h"
 #include "QuaternionEKF.h"
 #include "bsp_PWM.h"
+#include "math.h"
 
 INS_t INS;
 IMU_Param_t IMU_Param;
@@ -48,15 +49,20 @@ void INS_Init(void)
     INS.AccelLPF = 0.0085;
 }
 
+extern int is_rc_online;
+int is_rc_online_new;
+extern uint32_t current_rc_timer;
+uint32_t last_rc_timer = 0;
+uint32_t global_count = 0;
 void INS_Task(void)
 {
-    static uint32_t count = 0;
+    //static uint32_t global_count = 0;
     const float gravity[3] = {0, 0, 9.8015f};
     dt = DWT_GetDeltaT(&INS_DWT_Count);
     t += dt;
 
     // ins update
-    if ((count % 1) == 0)
+    if ((global_count % 1) == 0)
     {
         BMI088_Read(&BMI088); // 官方教程中给出的BMI088驱动
 
@@ -101,18 +107,26 @@ void INS_Task(void)
     }
 
     // temperature control
-    if ((count % 2) == 0)
+    if ((global_count % 10) == 0)
     {
         // 500hz
         IMU_Temperature_Ctrl();
     }
 
-    if ((count % 5) == 0)
-    {
-			//usart_printf("%f,%f,%f\n",QEKF_INS.Yaw,QEKF_INS.Pitch,QEKF_INS.Roll);
-        // 200hz
-    }
-    count++;
+		if ((global_count % 10) == 0)
+		{
+			if (global_count > last_rc_timer + 100)
+			{
+				is_rc_online_new = 0;
+			} else {
+				is_rc_online_new = 1;
+			}
+			last_rc_timer = current_rc_timer;
+		}
+		
+		//usart_printf("%d,%d,%d\r\n",global_count,current_rc_timer, last_rc_timer);
+		
+    global_count++;
 }
 
 
