@@ -26,6 +26,8 @@
 //******************全局变量*******************
 static uint8_t GimbalAngleMsg[40];
 
+extern double ZIMIAOPITCHOFFSET;
+extern double ZIMIAOYAWOFFSET;
 
 void communication_task(void const *pvParameters){
 		int count = 0;
@@ -34,13 +36,14 @@ void communication_task(void const *pvParameters){
 				//以200帧的速率发送云台信息
 				if(count % 5  ==  0)
 				{
-						Encode1(GimbalAngleMsg,get_INS()->Yaw,-get_INS()->Pitch,get_INS()->Roll);
+						Encode1(GimbalAngleMsg,(get_INS()->Yaw+ZIMIAOYAWOFFSET),-(get_INS()->Pitch+ZIMIAOPITCHOFFSET),get_INS()->Roll);
 						HAL_UART_Transmit(&huart1, GimbalAngleMsg, 17, 100);
 						usart1_tx_dma_enable(GimbalAngleMsg, 17);
 				}
 				if(count % 100 == 0)
 				{
-						Encode2(GimbalAngleMsg,get_refree_point()->robot_id>100?1:0,get_refree_point()->robot_id>100?get_refree_point()->robot_id-100:get_refree_point()->robot_id,1,robotIsAuto());
+					//usart_printf("%d", get_refree_point()->robot_id);
+					Encode2(GimbalAngleMsg,get_refree_point()->robot_id>100?0:1,get_refree_point()->robot_id>100?get_refree_point()->robot_id-100:get_refree_point()->robot_id,1,robotIsAuto());
 						HAL_UART_Transmit(&huart1, GimbalAngleMsg, 9, 100);
 						usart1_tx_dma_enable(GimbalAngleMsg, 9);
 				}

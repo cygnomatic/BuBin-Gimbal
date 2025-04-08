@@ -20,7 +20,9 @@
 
 
 //**************射击电机控制常量 15 0.40 0.24 0.53   1.0 0.6 1.72 1.0 18 0.45
-#define SHOOT_SPEED_LIMIT 0.60f        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系
+//#define SHOOT_SPEED_LIMIT 0.525f        //摩擦轮速度。未来可以测试摩擦轮速度和射速的关系 0.60f 
+double SHOOT_SPEED_LIMIT = 0.53;
+bool_t is_x_pressed = 0;
 #define SHOOT_TRIGGER_SPEED_LIMIT 0.5f   //拨弹轮开启时速度
 #define READY_TRIGGER_SPEED 0.625f				//拨弹轮准备速度
 
@@ -71,7 +73,7 @@
 #define STUCK_TIME_LIMIT 1500   //当在发射一发的模式中持续一段时间不退出后，进入卡弹解决模式
 #define SOLVING_TIME_LIMIT 500  //在尝试卡弹解决模式中停留的时间。
 
-
+fp32 yaw_v_offset = 0; // 小陀螺时的速度补偿
 
 const static fp32 motor_speed_pid[3] = {M3505_MOTOR_SPEED_PID_KP, M3505_MOTOR_SPEED_PID_KI, M3505_MOTOR_SPEED_PID_KD};
 const static fp32 trigger_motor_speed_pid[3] = {M2006_MOTOR_SPEED_PID_KP, M2006_MOTOR_SPEED_PID_KI, M2006_MOTOR_SPEED_PID_KD};
@@ -97,6 +99,7 @@ struct TriggerControl_s{
     uint16_t    nowECD;                 //现在的ECD
     int16_t     nowRounds;              //现在转过的圈数
 };
+
 
 //**********缓冲指令
 struct InstructBuff_s{
@@ -276,7 +279,7 @@ static void getInstructionAndBuff(void)
 		// LYL
 		static bool_t is_v_pressed = 0;
 		if (rc_p->key.v & KEY_PRESSED_OFFSET_V){
-			osDelay(100);
+			osDelay(80);
 			if ((rc_p->key.v & KEY_PRESSED_OFFSET_V) && !is_v_pressed) {
 				if (keywantFricOn) {keywantFricOn = 0;}
 				else {keywantFricOn = 1;}
@@ -292,7 +295,15 @@ static void getInstructionAndBuff(void)
 			mouseWantTriggerOn = 0;
 		}
 		
-		
+		// LYL
+		if (rc_p->key.v & KEY_PRESSED_OFFSET_X){
+			osDelay(80);
+			if ((rc_p->key.v & KEY_PRESSED_OFFSET_X) && !is_x_pressed) {
+				is_x_pressed = 1;
+			} else {
+				is_x_pressed = 0;
+			}
+		}
 		
 		// LYL
 		if (robotIsAuto() && wantFricOn){
@@ -490,6 +501,14 @@ static void setSpeedByMode(void)
 		else
 				wantedVTriggerMotor=0;
 
+		if (wantedVTriggerMotor==SHOOT_TRIGGER_SPEED_LIMIT && switch_is_up(rc_p->rc.s[0]))
+		{
+			yaw_v_offset = -0.005;
+		}
+		else
+		{
+			yaw_v_offset = 0;
+		}
 }
 
 extern int is_rc_online_new;
@@ -529,6 +548,11 @@ static void getShootMotorSpeed(void)
 void shoot_task(void const *pvParameters)
 {
     osDelay(SHOOT_TASK_INIT_TIME);
+		
+		// LYL
+		if (is_x_pressed)  SHOOT_SPEED_LIMIT = 0.51;
+		else SHOOT_SPEED_LIMIT = 0.525;
+	
     initShootPIDs();    //初始化PID
     initTriggerECDRoundsMonitor();  //初始化拨弹轮圈数监控
     initShootModes();   //初始化发射状态
@@ -558,7 +582,9 @@ void shoot_task(void const *pvParameters)
         zeroCurrentMark=1;
         #endif
         
-				usart_printf("%d\r\n",is_rc_online_new);
+				//usart_printf("%d\r\n",is_rc_online_new);
+			
+			//usart_printf("%d,%d\r\n", get_shoot_motor_measure_point(0)->temperate, get_shoot_motor_measure_point(1)->temperate);
 				
         if(zeroCurrentMark)
         {

@@ -50,9 +50,15 @@ standard_tpye_c\nuccommu.o: ..\SAS_Code\NUC_communicate\bsp_nucCom.h
 standard_tpye_c\nuccommu.o: ../application/detect_task.h
 standard_tpye_c\nuccommu.o: ../components/devices/OLED.h
 standard_tpye_c\nuccommu.o: ../components/devices/oledfont.h
-standard_tpye_c\nuccommu.o: ../SAS_Code/robot_total_mode.h
 standard_tpye_c\nuccommu.o: E:\Softwares\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 standard_tpye_c\nuccommu.o: E:\Softwares\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 standard_tpye_c\nuccommu.o: ../bsp/boards/bsp_buzzer.h
 standard_tpye_c\nuccommu.o: ../application/usb_task.h
 standard_tpye_c\nuccommu.o: ../components/support/CRC8_CRC16.h
+standard_tpye_c\nuccommu.o: ../application/INS_task.h
+standard_tpye_c\nuccommu.o: ../WANG_HONG/Components/Devices/BMI088driver.h
+standard_tpye_c\nuccommu.o: ../WANG_HONG/Components/Algorithm/QuaternionEKF.h
+standard_tpye_c\nuccommu.o: ../components/algorithm/kalman_filter.h
+standard_tpye_c\nuccommu.o: ../components/algorithm/Include/arm_math.h
+standard_tpye_c\nuccommu.o: ../Drivers/CMSIS/Include/core_cm4.h
+standard_tpye_c\nuccommu.o: E:\Softwares\Keil_v5\ARM\ARMCC\Bin\..\include\math.h

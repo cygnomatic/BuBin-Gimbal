@@ -78,6 +78,7 @@ static uint8_t              shoot_can_send_data[8];
 static CAN_TxHeaderTypeDef  chassis_tx_message;
 static uint8_t              chassis_can_send_data[8];
 
+uint8_t receive_data[8];
 
 //回调函数。用于can的信息获取。在fifo结构内。
 /**
@@ -113,7 +114,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
             }
 
             get_motor_measure(&motor_chassis[i], rx_data);
-            detect_hook(CHASSIS_MOTOR1_TOE + i);
+            //detect_hook(CHASSIS_MOTOR1_TOE + i);
             break;
         }
 				case 0x004:
@@ -131,9 +132,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 						gimbal_rx_referee.robot_id=data_0.data_s.robot_id;
 						break;
 				}
+				case 0x88:
+				{
+					memcpy(&receive_data, rx_data, 8);	
+					//usart_printf("%d\r\n", receive_data[0]);
+					break;
+				}
         default:
         {
-            break;
+          break;
         }
     }
 }
@@ -249,6 +256,10 @@ typedef struct
 }can_send_encode_data_s;
 extern int is_rc_online_new;
 extern bool_t wantFricOn;
+extern bool_t keywantFricOn;
+extern bool_t is_x_pressed;
+extern bool_t wantTriggerOn, mouseWantTriggerOn;
+extern uint8_t triggerOn;
 void CAN1_send_channel()  // 使用CAN1发送遥控信息
 {
 	uint32_t send_mail_box;
@@ -262,7 +273,19 @@ void CAN1_send_channel()  // 使用CAN1发送遥控信息
 	data_u.data.channel_0 = 0;
 	if (is_rc_online_new)
 	{
-		data_u.data.channel_0 = data_u.data.channel_0 | 1;
+		data_u.data.channel_0 = data_u.data.channel_0 | 1; //遥控器在线
+	}
+	if (rc_chassis->key.v&KEY_PRESSED_OFFSET_R)
+	{
+		data_u.data.channel_0 = data_u.data.channel_0 | 2; //刷新UI
+	}
+//	if (is_x_pressed)
+//	{
+//		data_u.data.channel_0 = data_u.data.channel_0 | 4; //切换摩擦轮转速
+//	}
+	if (triggerOn || wantTriggerOn || mouseWantTriggerOn)
+	{
+		data_u.data.channel_0 = data_u.data.channel_0 | 8; //是否打开拨弹电机
 	}
 	
 	//usart_printf("%d\r\n", data_u.data.channel_0);
@@ -283,16 +306,16 @@ void CAN1_send_channel()  // 使用CAN1发送遥控信息
 		data_u.data.keyboard = (data_u.data.keyboard | 32);
 	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_D)
 		data_u.data.keyboard = (data_u.data.keyboard | 16);
-	if(get_fric() || wantFricOn)	//摩擦轮
+	if(get_fric() || wantFricOn || keywantFricOn)	//摩擦轮
 		data_u.data.keyboard = (data_u.data.keyboard | 8);
-	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_SHIFT)
+	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_SHIFT) // 加速移动
 		data_u.data.keyboard = (data_u.data.keyboard | 4);
 	if(robotIsAuto())//修改成是否开启自瞄
 		data_u.data.keyboard = (data_u.data.keyboard | 2);
 //	if(*getRobotPresentMode()==RobotState_e_Spinner)
 //		data_u.data.keyboard = (data_u.data.keyboard | 1);
 	// 应刘崇要求改的
-	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_CTRL)
+	if(rc_chassis->key.v&KEY_PRESSED_OFFSET_CTRL) // 小陀螺
 		data_u.data.keyboard = (data_u.data.keyboard | 1);
 	for(int i = 0; i <sizeof(can_send_encode_data_s); i++)
 	{

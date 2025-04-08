@@ -5,12 +5,12 @@
 #include "struct_typedef.h"
 #include "detect_task.h"
 #include "OLED.h"
-#include "robot_total_mode.h"
 #include <stdlib.h>
 #include <string.h>
 #include "bsp_buzzer.h"
 #include "usb_task.h"
 #include "CRC8_CRC16.h"
+#include "INS_task.h"
 
 extern UART_HandleTypeDef huart1;
 extern DMA_HandleTypeDef hdma_usart1_rx;
@@ -168,7 +168,7 @@ void USART1_IRQHandler(void)
             if (this_time_rx_len == NUCINFO_FRAME_LENGTH)
             {
                 sbus_to_nucCtrl(nucinfo_rx_buf[0], &GimbalRxMsg);
-//							usart_printf("%d,%f,%f,%f\n",GimbalRxMsg.is_fire,GimbalRxMsg.confidence,GimbalRxMsg.pitch,GimbalRxMsg.yaw);
+							//usart_printf("receive: %f,%f,%f\r\npresent: %f,%f\r\n",GimbalRxMsg.confidence.data,GimbalRxMsg.pitch.data,GimbalRxMsg.yaw.data,get_INS()->Pitch,get_INS()->Yaw);
                 //usart_printf("%d,%d,%d,%f,%f,%f,%f\r\n",GimbalRxMsg.is_fire,GimbalRxMsg.is_spin,GimbalRxMsg.recognized,GimbalRxMsg.yaw.data,GimbalRxMsg.pitch.data,GimbalRxMsg.velocity_x.data,GimbalRxMsg.velocity_y.data);
             }
         }
@@ -198,7 +198,7 @@ void USART1_IRQHandler(void)
             if (this_time_rx_len == NUCINFO_FRAME_LENGTH)
             {
                 sbus_to_nucCtrl(nucinfo_rx_buf[1], &GimbalRxMsg);
-//                usart_printf("%d,%f,%f,%f\n",GimbalRxMsg.is_fire,GimbalRxMsg.confidence,GimbalRxMsg.pitch,GimbalRxMsg.yaw);
+							//usart_printf("receive: %f,%f,%f\r\npresent: %f,%f\r\n",GimbalRxMsg.confidence.data,GimbalRxMsg.pitch.data,GimbalRxMsg.yaw.data,get_INS()->Pitch,get_INS()->Yaw);
             }
         }
     }

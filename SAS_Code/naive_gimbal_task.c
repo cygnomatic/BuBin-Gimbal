@@ -117,11 +117,9 @@
 #define GIMBAL_DEAD_BOND 0.00 // LYL:死区值
 #define YAW_DEAD_BOND 0.00 // 0.0007 安全临界死区
 
-
-
-
-
-
+// LYL 自瞄相关
+double ZIMIAOPITCHOFFSET = 0.0;
+double ZIMIAOYAWOFFSET = 0.0;
 
 
 #define ECD_FULL_ROUND 8192
@@ -450,6 +448,9 @@ int adjust_channel(int16_t channel, float ctrl_prop, float ctrl_exp)
 	return a;
 	
 }
+
+extern fp32 yaw_v_offset;
+extern uint8_t receive_data[8]; 
 void getControlAngles(void)
 {
 		
@@ -487,11 +488,26 @@ void getControlAngles(void)
 				gimbalPitchCtrl.wantedAbsoluteAngle+=1*pitch_channel*PITCH_RC_SEN-10*rc_p->mouse.y*PITCH_MOUSE_SEN;
 //				//gimbalPitchCtrl.wantedAbsoluteAngle += adjust_channel(pitch_channel, K_CTRL_PROP_Y, K_CTRL_EXP_Y) * PITCH_RC_SEN - adjust_channel(rc_p->mouse.y, K_CTRL_MOUSE_Y, K_CTRL_EXP_Y) * PITCH_MOUSE_SEN ;
 
+				static double kkk = 0.08;
+				
+				if (receive_data[0] <= 2) {
+					kkk = 0.005;
+				} else if (receive_data[0] <= 4) {
+					kkk = 0.005;
+				} else if (receive_data[0] <= 6) {
+					kkk = 0.005;
+				} else if (receive_data[0] <= 8) {
+					kkk = 0.005;
+				} else if (receive_data[0] <= 10) {
+					kkk = 0.005;
+				}
 				
 				//yaw轴目标值控制
-        gimbalYawCtrl.wantedAbsoluteAngle+=5*yaw_channel*YAW_RC_SEN+20*rc_p->mouse.x * YAW_MOUSE_SEN;
+        gimbalYawCtrl.wantedAbsoluteAngle+=5*yaw_channel*YAW_RC_SEN+20*rc_p->mouse.x * YAW_MOUSE_SEN + kkk*yaw_v_offset;
 				//gimbalYawCtrl.wantedAbsoluteAngle +=  adjust_channel(yaw_channel, K_CTRL_PROP_X, K_CTRL_EXP_X) * YAW_RC_SEN + adjust_channel(rc_p->mouse.x,K_CTRL_MOUSE_X,K_CTRL_EXP_MOUSE_X)*YAW_MOUSE_SEN;
-
+				
+				//usart_printf("%f\r\n", yaw_v_offset);
+				
 				//修复bug
 				if(gimbalYawCtrl.wantedAbsoluteAngle>=3.086)
 					gimbalYawCtrl.wantedAbsoluteAngle-=2*PI;
@@ -500,6 +516,7 @@ void getControlAngles(void)
 				
 			// LYL修改
 			//usart_printf("%d,%d\n", robotIsAuto(),fricOn);
+//			if(robotIsAuto() && !fricOn)
 			if(robotIsAuto() && !fricOn)
 			{
 				wantFricOn = 1;
@@ -509,12 +526,18 @@ void getControlAngles(void)
 				//usart_printf("detect:%f,%f\tnow:%f,%f\r\n",delta_yaw, delta_pitch ,gimbalYawCtrl.nowAbsoluteAngle, gimbalPitchCtrl.nowAbsoluteAngle);
 				if(delta_pitch > 0.00001 || delta_pitch < -0.00001){
 					gimbalPitchCtrl.wantedAbsoluteAngle = delta_pitch;
+				} else {
+					gimbalPitchCtrl.wantedAbsoluteAngle = gimbalPitchCtrl.nowAbsoluteAngle + kkk*yaw_v_offset + ZIMIAOPITCHOFFSET;
 				}
 				if(delta_yaw > 0.00001 || delta_yaw < -0.00001){
 					gimbalYawCtrl.wantedAbsoluteAngle = delta_yaw;
+				} else {
+					gimbalYawCtrl.wantedAbsoluteAngle = gimbalYawCtrl.nowAbsoluteAngle + kkk*yaw_v_offset + ZIMIAOYAWOFFSET;
 				}
 			} else {
 				wantFricOn = 0;
+				delta_pitch = 0;
+				delta_yaw = 0;
 			}
 
     }
@@ -701,7 +724,7 @@ void gimbal_task(void const *pvParameters)
         }
 				limitAnglesSecond();
 //				gimbalPitchCtrl.wantedAbsoluteAngle = 0.0f;
-        calcPID();              
+        calcPID();
         CAN_cmd_gimbal(gimbalYawCtrl.giveVolt,gimbalPitchCtrl.giveVolt,*triggerCurrentP,0);       
 				//CAN_cmd_yaw(gimbalYawCtrl.giveVolt);
 				
